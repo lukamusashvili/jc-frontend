@@ -6,8 +6,6 @@ import { useNavigate } from "react-router";
 import { useSnapshot } from "valtio";
 import {
     filterModalState,
-    categoriesState,
-    suppliersState,
 } from "../../../states";
 import { TransactionType, TransactionTypeDisplay } from "../../../enums/transactions";
 

@@ -6,9 +6,8 @@ import { Select } from "../../Select";
 import { editTransaction } from "../../../actions/transactions";
 import { Transaction } from "../../../types/finances";
 import { useSnapshot } from "valtio";
-import { transactionFormState, modalState, productsState } from "../../../states";
+import { transactionFormState, productsState } from "../../../states";
 import { Transaction as TransactionEnum, TransactionType, TransactionTypeDisplay } from "../../../enums/transactions";
-import { Transaction as TransactionButtonEnum } from "../../../enums/button";
 import { getProducts } from "../../../actions/products";
 import { useParams } from "react-router";
 

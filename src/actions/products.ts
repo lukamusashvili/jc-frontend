@@ -4,15 +4,6 @@ import { addTransaction } from "./transactions";
 import { getWallets } from "./wallets";
 import { TransactionType } from "../enums/transactions";
 
-interface ProductFilters {
-    category?: string[];
-    supplier?: string[];
-    createdAt?: {
-        from: string;
-        to: string;
-    };
-}
-
 export async function getProducts(query: string) {
     try {
         const urlParams = new URLSearchParams(query);

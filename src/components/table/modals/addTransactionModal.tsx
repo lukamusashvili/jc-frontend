@@ -5,7 +5,7 @@ import { Input } from "../../Input";
 import { Select } from "../../Select";
 import { addTransaction } from "../../../actions/transactions";
 import { useSnapshot } from "valtio";
-import { transactionFormState, modalState } from "../../../states";
+import { transactionFormState } from "../../../states";
 import { Transaction as TransactionEnum, TransactionType, TransactionTypeDisplay } from "../../../enums/transactions";
 import { Transaction as TransactionButtonEnum } from "../../../enums/button";
 import { getProducts } from "../../../actions/products";
