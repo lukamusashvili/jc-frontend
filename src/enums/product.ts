@@ -1,0 +1,18 @@
+export enum Product {
+    ID = "N",
+    TITLE = "დასახელება",
+    CATEGORY = "კატეგორია",
+    SUPPLIER = "მომწოდებელი",
+    TOTAL_QUANTITY = "სრული რაოდენობა",
+    QUANTITY = "რაოდენობა",
+    UNIT_COST = "ღირებულება",
+    TOTAL_COST = "ჯამური ღირებულება",
+    CURRENT_TOTAL_COST = "ამჟამინდელი ჯამური ღირებულება",
+    UNIT_PRICE = "ფასი",
+    TOTAL_PRICE = "ჯამური ფასი",
+    UNIT_PROFIT = "მოგება",
+    TOTAL_PROFIT = "ჯამური მოგება",
+    PROFIT_PERCENTAGE = "მოგების პროცენტი",
+    COMMENT = "კომენტარი",
+    CREATED_AT = "შექმნის თარიღი",
+}
