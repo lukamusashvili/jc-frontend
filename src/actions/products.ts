@@ -13,6 +13,10 @@ export async function getProducts(query: string) {
 
         // Build filters
         let queryBuilder = supabase.from("product").select("*", { count: "exact" });
+        
+        // Filter out deleted products
+        // Note: Run migration SQL first: ALTER TABLE product ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT FALSE;
+        queryBuilder = queryBuilder.eq("deleted", false);
 
         // Category filter
         const categoryFilter = urlParams.get("category");
@@ -26,6 +30,12 @@ export async function getProducts(query: string) {
         if (supplierFilter) {
             const suppliers = supplierFilter.split(",");
             queryBuilder = queryBuilder.in("supplier", suppliers);
+        }
+
+        // Search filter (by product title)
+        const searchTerm = urlParams.get("search");
+        if (searchTerm) {
+            queryBuilder = queryBuilder.ilike("title", `%${searchTerm}%`);
         }
 
         // Date filter
@@ -193,9 +203,10 @@ export async function editProduct(data: Product) {
 
 export async function deleteProduct(id: number) {
     try {
+        // Soft delete: set deleted = true
         const { error } = await supabase
             .from("product")
-            .delete()
+            .update({ deleted: true })
             .eq("_id", id);
 
         if (error) {
@@ -208,6 +219,129 @@ export async function deleteProduct(id: number) {
         };
     } catch (error: any) {
         console.error("Error deleting product:", error);
+        throw error;
+    }
+}
+
+export async function restoreProduct(id: number) {
+    try {
+        const { error } = await supabase
+            .from("product")
+            .update({ deleted: false })
+            .eq("_id", id);
+
+        if (error) {
+            throw error;
+        }
+
+        return {
+            message: "პროდუქტი წარმატებით აღდგენილია",
+            data: null,
+        };
+    } catch (error: any) {
+        console.error("Error restoring product:", error);
+        throw error;
+    }
+}
+
+export async function permanentDeleteProduct(id: number) {
+    try {
+        // Permanently delete from database
+        const { error } = await supabase
+            .from("product")
+            .delete()
+            .eq("_id", id);
+
+        if (error) {
+            throw error;
+        }
+
+        return {
+            message: "პროდუქტი მუდმივად წაიშალა",
+            data: null,
+        };
+    } catch (error: any) {
+        console.error("Error permanently deleting product:", error);
+        throw error;
+    }
+}
+
+export async function getDeletedProducts(query: string) {
+    try {
+        const urlParams = new URLSearchParams(query);
+        const page = parseInt(urlParams.get("page") || "1");
+        const limit = parseInt(urlParams.get("limit") || "10");
+        const skip = (page - 1) * limit;
+
+        // Build filters - only get deleted products
+        let queryBuilder = supabase.from("product").select("*", { count: "exact" });
+        queryBuilder = queryBuilder.eq("deleted", true);
+
+        // Search filter (by product title)
+        const searchTerm = urlParams.get("search");
+        if (searchTerm) {
+            queryBuilder = queryBuilder.ilike("title", `%${searchTerm}%`);
+        }
+
+        // Category filter
+        const categoryFilter = urlParams.get("category");
+        if (categoryFilter) {
+            const categories = categoryFilter.split(",");
+            queryBuilder = queryBuilder.in("category", categories);
+        }
+
+        // Supplier filter
+        const supplierFilter = urlParams.get("supplier");
+        if (supplierFilter) {
+            const suppliers = supplierFilter.split(",");
+            queryBuilder = queryBuilder.in("supplier", suppliers);
+        }
+
+        // Date filter
+        const createdAtFrom = urlParams.get("createdAt.from");
+        const createdAtTo = urlParams.get("createdAt.to");
+        if (createdAtFrom && createdAtTo) {
+            const [fromDay, fromMonth, fromYear] = createdAtFrom.split(" ").map(Number);
+            const [toDay, toMonth, toYear] = createdAtTo.split(" ").map(Number);
+            
+            if (fromDay && fromMonth && fromYear && toDay && toMonth && toYear) {
+                const startDate = new Date(fromYear, fromMonth - 1, fromDay, 0, 0, 0, 0).toISOString();
+                const endDate = new Date(toYear, toMonth - 1, toDay, 23, 59, 59, 999).toISOString();
+                queryBuilder = queryBuilder.gte("created_at", startDate).lte("created_at", endDate);
+            }
+        }
+
+        // Apply pagination
+        queryBuilder = queryBuilder.order("_id", { ascending: true }).range(skip, skip + limit - 1);
+
+        const { data, error, count } = await queryBuilder;
+
+        if (error) {
+            throw error;
+        }
+
+        // Map created_at to createdAt for frontend compatibility
+        const mappedData = (data || []).map((product: any) => ({
+            ...product,
+            createdAt: product.created_at || product.createdAt,
+        }));
+
+        const totalCount = count || 0;
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return {
+            data: mappedData,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalCount,
+                limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+            },
+        };
+    } catch (error: any) {
+        console.error("Error fetching deleted products:", error);
         throw error;
     }
 }

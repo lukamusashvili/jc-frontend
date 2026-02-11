@@ -7,24 +7,36 @@ export const modalState = proxy({
     addProduct: false,
     editProduct: false,
     sellProduct: false,
+    giftProduct: false,
     deleteProduct: false,
+    restoreProduct: false,
+    permanentDeleteProduct: false,
     productToDelete: null as Product | null,
+    confirmEditProduct: false,
+    productToEdit: null as Product | null,
     
     // Wallet modals
     walletModal: false,
     deleteWallet: false,
     walletToDelete: null as Wallet | null,
+    confirmEditWallet: false,
+    walletToEdit: null as Wallet | null,
     
     // Transaction modals
     addTransaction: false,
     editTransaction: false,
     deleteTransaction: false,
+    restoreTransaction: false,
+    permanentDeleteTransaction: false,
     transactionToDelete: null as Transaction | null,
     transactionToEdit: null as Transaction | null,
+    transactionToPermanentDelete: null as Transaction | null,
+    confirmEditTransaction: false,
     
     // Selector modals (for combobox dropdowns)
     supplierSelector: false,
     categorySelector: false,
+    productSelector: false,
     
     // Filter modals
     supplierFilter: false,

@@ -57,4 +57,6 @@ export const productFormState = proxy({
         total_quantity: 0,
         quantity: 0,
     },
+    originalQuantity: 0,
+    originalTotalQuantity: 0,
 });

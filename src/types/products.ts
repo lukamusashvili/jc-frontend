@@ -14,6 +14,7 @@ export type Product = {
     total_profit: number; //ჯამური მოგება
     profit_percentage: number; //მოგების პროცენტი
     comment: string; //კომენტარი
+    deleted?: boolean; //წაშლილი
     createdAt: string; //შექმნის თარიღი
 };
 

@@ -15,6 +15,7 @@ import {
 } from "../../../states";
 import { getCategories, addCategory, deleteCategory } from "../../../actions/categories";
 import { getSuppliers, addSupplier, deleteSupplier } from "../../../actions/suppliers";
+import { Delete } from "../../../enums/confirmation";
 
 export const AddProductModal = ({
     isOpen,
@@ -495,7 +496,7 @@ export const AddProductModal = ({
             >
                 <div className="text-center py-4">
                     <p className="text-[var(--color-black)]">
-                        დარწმუნებული ხართ რომ გსურთ ამ კატეგორიის წაშლა?
+                        {Delete.DELETE_CATEGORY}
                     </p>
                 </div>
             </Modal>
@@ -521,7 +522,7 @@ export const AddProductModal = ({
             >
                 <div className="text-center py-4">
                     <p className="text-[var(--color-black)]">
-                        დარწმუნებული ხართ რომ გსურთ ამ მომწოდებლის წაშლა?
+                        {Delete.DELETE_SUPPLIER}
                     </p>
                 </div>
             </Modal>

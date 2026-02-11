@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS product (
     total_profit NUMERIC DEFAULT 0,
     profit_percentage NUMERIC DEFAULT 0,
     comment TEXT,
+    deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     amount NUMERIC NOT NULL,
     product TEXT,
     comment TEXT,
+    deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -129,3 +131,7 @@ $$ language 'plpgsql';
 -- Create trigger for product table
 CREATE TRIGGER update_product_updated_at BEFORE UPDATE ON product
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Add deleted column to existing tables if they don't have it
+ALTER TABLE product ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT FALSE;

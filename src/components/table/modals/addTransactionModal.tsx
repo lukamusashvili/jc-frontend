@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { Modal } from "../../layout/Modal";
 import { Input } from "../../Input";
 import { Select } from "../../Select";
+import { Combobox } from "../../Combobox";
 import { addTransaction } from "../../../actions/transactions";
 import { useSnapshot } from "valtio";
 import { transactionFormState } from "../../../states";
@@ -83,10 +84,16 @@ export const AddTransactionModal = ({
         transactionFormState.loading = true;
         try {
             // Find product by title if product field is filled
+            // The product field may contain "Title (N: ID)" format, so we need to extract the title
             let productId: string | undefined = undefined;
             if (formSnap.formData.product) {
+                // Extract title from "Title (N: ID)" format or use as-is if it's just the title
+                const productTitle = formSnap.formData.product.includes("(N:")
+                    ? formSnap.formData.product.split("(N:")[0].trim()
+                    : formSnap.formData.product;
+                
                 const selectedProduct = productsSnap.data.data.find(
-                    (p) => p.title === formSnap.formData.product
+                    (p) => p.title === productTitle
                 );
                 if (selectedProduct) {
                     productId = selectedProduct._id.toString();
@@ -163,18 +170,19 @@ export const AddTransactionModal = ({
                     required
                 />
 
-                <Select
+                <Combobox
                     label={TransactionEnum.PRODUCT}
                     value={formSnap.formData.product}
-                    onChange={(e) => handleInputChange("product", e.target.value)}
-                >
-                    <option value="">-- არ არის არჩეული --</option>
-                    {productsSnap.data.data.map((product) => (
-                        <option key={product._id} value={product.title}>
-                            {product.title} (N: {product._id})
-                        </option>
-                    ))}
-                </Select>
+                    onChange={(value: string) =>
+                        handleInputChange("product", value)
+                    }
+                    options={productsSnap.data.data.map((p) => ({
+                        _id: p._id,
+                        title: `${p.title} (N: ${p._id})`,
+                    })) as readonly { readonly _id: number | string; readonly title: string }[]}
+                    placeholder={`აირჩიეთ ან შეიყვანეთ პროდუქტი`}
+                    modalKey="productSelector"
+                />
 
                 <Input
                     label={TransactionEnum.COMMENT}

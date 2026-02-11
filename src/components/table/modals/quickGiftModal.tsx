@@ -9,19 +9,19 @@ import { getWallets } from "../../../actions/wallets";
 import { TransactionType } from "../../../enums/transactions";
 import { toast } from "react-toastify";
 
-type QuickSellModalProps = {
+type QuickGiftModalProps = {
     product: Product | null;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
 };
 
-export const QuickSellModal = ({
+export const QuickGiftModal = ({
     product,
     isOpen,
     onClose,
     onSuccess,
-}: QuickSellModalProps) => {
+}: QuickGiftModalProps) => {
     const snap = useSnapshot(productFormState);
 
     if (!isOpen || !product) return null;
@@ -29,53 +29,52 @@ export const QuickSellModal = ({
     const handleSubmit = async () => {
         if (!product) return;
 
-        const quantitySold = snap.quantityData.quantity;
+        const quantityGifted = snap.quantityData.quantity;
 
-        // Validate that quantity sold doesn't exceed available quantity
-        if (quantitySold > product.quantity) {
+        // Validate that quantity gifted doesn't exceed available quantity
+        if (quantityGifted > product.quantity) {
             toast.error(
-                `არ შეიძლება ${quantitySold} ერთეულის გაყიდვა. ხელმისაწვდომია მხოლოდ ${product.quantity} ერთეული.`,
+                `არ შეიძლება ${quantityGifted} ერთეულის გაჩუქება. ხელმისაწვდომია მხოლოდ ${product.quantity} ერთეული.`,
             );
             return;
         }
 
-        // Validate that quantity sold is positive
-        if (quantitySold <= 0) {
-            toast.error("გასაყიდი რაოდენობა უნდა იყოს 0-ზე მეტი");
+        // Validate that quantity gifted is positive
+        if (quantityGifted <= 0) {
+            toast.error("გასაჩუქებელი რაოდენობა უნდა იყოს 0-ზე მეტი");
             return;
         }
 
         productFormState.loading = true;
         try {
-            const newQuantity = product.quantity - quantitySold;
+            const newQuantity = product.quantity - quantityGifted;
             await editProduct({ ...product, quantity: newQuantity });
 
-            // Create transaction for product sale
+            // Create transaction for product gift
             try {
-                // Get wallets to find the default wallet (ID 1) or first wallet
+                // Get wallets to find the gift wallet (ID 2)
                 const wallets = await getWallets();
-                const defaultWallet =
-                    wallets.find((w) => w._id === 1) || wallets[0];
+                const giftWallet = wallets.find((w) => w._id === 2);
 
                 if (
-                    defaultWallet &&
-                    quantitySold > 0 &&
+                    giftWallet &&
+                    quantityGifted > 0 &&
                     product.unit_price > 0
                 ) {
-                    const saleAmount = product.unit_price * quantitySold;
+                    const giftAmount = product.unit_price * quantityGifted;
                     await addTransaction({
-                        title: "პროდუქტის გაყიდვა",
-                        wallet: defaultWallet._id.toString(),
-                        type: TransactionType.IN,
-                        amount: saleAmount,
+                        title: "პროდუქტის გაჩუქება",
+                        wallet: giftWallet._id.toString(),
+                        type: TransactionType.OUT,
+                        amount: giftAmount,
                         product: product._id.toString(),
                         comment: "შეიქმნა ავტომატურად",
                     });
                 }
             } catch (transactionError: any) {
-                // Log error but don't fail the product sale
+                // Log error but don't fail the product gift
                 console.error(
-                    "Error creating transaction for product sale:",
+                    "Error creating transaction for product gift:",
                     transactionError,
                 );
             }
@@ -98,11 +97,11 @@ export const QuickSellModal = ({
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
-            title="გაყიდვა"
+            title="გაჩუქება"
             size="sm"
             actionButtons={{
                 primary: {
-                    title: "გაყიდვა",
+                    title: "გაჩუქება",
                     onClick: handleSubmit,
                     type: snap.loading ? "disabled" : "gold",
                 },
@@ -125,7 +124,7 @@ export const QuickSellModal = ({
             </div>
 
             <Input
-                label="გასაყიდი რაოდენობა"
+                label="გასაჩუქებელი რაოდენობა"
                 type="number"
                 value={snap.quantityData.quantity}
                 onChange={(value) => {

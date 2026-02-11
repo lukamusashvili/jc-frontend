@@ -16,6 +16,7 @@ import {
 import { EditProductModalProps } from "../../../types/ui";
 import { getCategories, addCategory, deleteCategory } from "../../../actions/categories";
 import { getSuppliers, addSupplier, deleteSupplier } from "../../../actions/suppliers";
+import { Delete, Edit } from "../../../enums/confirmation";
 
 export const EditProductModal = ({
     product,
@@ -30,13 +31,20 @@ export const EditProductModal = ({
 
     useEffect(() => {
         if (product) {
+            const initialQuantity = product.quantity || 0;
+            const initialTotalQuantity = product.total_quantity || 0;
+            
+            // Store original values in Valtio state
+            productFormState.originalQuantity = initialQuantity;
+            productFormState.originalTotalQuantity = initialTotalQuantity;
+            
             // Update the editFormData in the valtio state with all fields
             productFormState.editFormData = {
                 title: product.title || "",
                 category: product.category || "",
                 supplier: product.supplier || "",
-                quantity: product.quantity || 0,
-                total_quantity: product.total_quantity || 0,
+                quantity: initialQuantity,
+                total_quantity: initialTotalQuantity,
                 unit_cost: product.unit_cost || 0,
                 unit_price: product.unit_price || 0,
                 total_cost: product.total_cost || 0,
@@ -69,15 +77,48 @@ export const EditProductModal = ({
     }, [product]);
 
     const handleInputChange = (field: string, value: string | number) => {
-        productFormState.editFormData = {
+        const updatedData: any = {
             ...productFormState.editFormData,
             [field]: value,
         };
+
+        // Handle quantity changes - update total_quantity when quantity increases
+        if (field === "quantity") {
+            const newQuantity = Number(value);
+            
+            // Ensure quantity doesn't go negative
+            if (newQuantity < 0) {
+                toast.error("რაოდენობა არ შეიძლება იყოს უარყოფითი");
+                return;
+            }
+
+            // Calculate the difference from original quantity
+            const quantityDifference = newQuantity - productFormState.originalQuantity;
+            
+            // If quantity increased, add the difference to total_quantity
+            if (quantityDifference > 0) {
+                updatedData.total_quantity = productFormState.originalTotalQuantity + quantityDifference;
+            } else {
+                // If quantity decreased or stayed same, keep total_quantity at original value
+                // (we don't reduce total_quantity when quantity decreases)
+                updatedData.total_quantity = productFormState.originalTotalQuantity;
+            }
+        }
+
+        productFormState.editFormData = updatedData;
     };
 
     const handleSubmit = async () => {
         if (!product) return;
 
+        // Show confirmation modal first
+        modalState.confirmEditProduct = true;
+    };
+
+    const confirmSubmit = async () => {
+        if (!product) return;
+
+        modalState.confirmEditProduct = false;
         productFormState.loading = true;
         try {
             let category = formSnap.editFormData.category?.trim() || undefined;
@@ -144,14 +185,18 @@ export const EditProductModal = ({
             if (response && response.data) {
                 toast.success(response.message);
                 onSuccess();
+                onClose();
             }
         } catch (error: any) {
             console.error("Error updating product:", error);
             toast.error(error.response?.data?.message || error.message);
         } finally {
             productFormState.loading = false;
-            onClose(); // Always close modal and refetch data
         }
+    };
+
+    const closeEditConfirmModal = () => {
+        modalState.confirmEditProduct = false;
     };
 
     const handleDeleteCategory = async () => {
@@ -222,7 +267,7 @@ export const EditProductModal = ({
                 primary: {
                     title: "განახლება",
                     onClick: handleSubmit,
-                    type: formSnap.loading ? "disabled" : "gold",
+                    type: formSnap.loading || modalSnap.confirmEditProduct ? "disabled" : "gold",
                 },
                 secondary: {
                     title: "გაუქმება",
@@ -318,18 +363,17 @@ export const EditProductModal = ({
                         რაოდენობა
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                            label={ProductEnum.TOTAL_QUANTITY}
-                            type="number"
-                            value={formSnap.editFormData.total_quantity}
-                            onChange={(value: string) =>
-                                handleInputChange(
-                                    "total_quantity",
-                                    Number(value)
-                                )
-                            }
-                            min="0"
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-[var(--color-black)] mb-1">
+                                {ProductEnum.TOTAL_QUANTITY}
+                            </label>
+                            <input
+                                type="number"
+                                value={formSnap.editFormData.total_quantity}
+                                disabled
+                                className="w-full text-[var(--color-gray)] bg-[var(--color-bg-light)] h-[45px] opacity-60 rounded-lg border-[var(--color-gray)] border border-opacity-60 px-5 py-4 text-sm cursor-not-allowed"
+                            />
+                        </div>
                         <Input
                             label={ProductEnum.QUANTITY}
                             type="number"
@@ -474,7 +518,7 @@ export const EditProductModal = ({
             >
                 <div className="text-center py-4">
                     <p className="text-[var(--color-black)]">
-                        დარწმუნებული ხართ რომ გსურთ ამ კატეგორიის წაშლა?
+                        {Delete.DELETE_CATEGORY}
                     </p>
                 </div>
             </Modal>
@@ -500,7 +544,33 @@ export const EditProductModal = ({
             >
                 <div className="text-center py-4">
                     <p className="text-[var(--color-black)]">
-                        დარწმუნებული ხართ რომ გსურთ ამ მომწოდებლის წაშლა?
+                        {Delete.DELETE_SUPPLIER}
+                    </p>
+                </div>
+            </Modal>
+
+            {/* Edit Confirmation Modal */}
+            <Modal
+                isOpen={modalSnap.confirmEditProduct}
+                onClose={closeEditConfirmModal}
+                title="ყურადღება"
+                size="md"
+                actionButtons={{
+                    primary: {
+                        title: "დიახ",
+                        onClick: confirmSubmit,
+                        type: formSnap.loading ? "disabled" : "gold",
+                    },
+                    secondary: {
+                        title: "გაუქმება",
+                        onClick: closeEditConfirmModal,
+                        type: formSnap.loading ? "disabled" : "white",
+                    },
+                }}
+            >
+                <div className="text-center py-4">
+                    <p className="text-[var(--color-black)]">
+                        {Edit.EDIT_PRODUCT}
                     </p>
                 </div>
             </Modal>

@@ -5,13 +5,19 @@ import {
     FilterFilled,
     ReloadOutlined,
     ShoppingCartOutlined,
+    GiftOutlined,
     DeleteOutlined,
+    RollbackOutlined,
 } from "@ant-design/icons";
 import { TableProps } from "../../types/table";
-import { TransactionType, TransactionTypeDisplay } from "../../enums/transactions";
+import {
+    TransactionType,
+    TransactionTypeDisplay,
+} from "../../enums/transactions";
 import { FilterSelectorModal } from "./modals/filterSelectorModal";
 import { useSnapshot } from "valtio";
 import { tableState } from "../../states";
+import { Table as TableEnum } from "../../enums/table";
 
 export const Table = <T extends Record<string, any>>({
     data,
@@ -19,7 +25,10 @@ export const Table = <T extends Record<string, any>>({
     columns,
     onEdit,
     onQuickSell,
+    onGift,
     onDelete,
+    onRestore,
+    onPermanentDelete,
 }: TableProps<T>) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -33,7 +42,7 @@ export const Table = <T extends Record<string, any>>({
                 onEdit(item);
             }
         },
-        [onEdit]
+        [onEdit],
     );
 
     const handleQuickSell = useCallback(
@@ -42,7 +51,16 @@ export const Table = <T extends Record<string, any>>({
                 onQuickSell(item);
             }
         },
-        [onQuickSell]
+        [onQuickSell],
+    );
+
+    const handleGift = useCallback(
+        (item: T) => {
+            if (onGift) {
+                onGift(item);
+            }
+        },
+        [onGift],
     );
 
     const handleDelete = useCallback(
@@ -51,7 +69,25 @@ export const Table = <T extends Record<string, any>>({
                 onDelete(item);
             }
         },
-        [onDelete]
+        [onDelete],
+    );
+
+    const handleRestore = useCallback(
+        (item: T) => {
+            if (onRestore) {
+                onRestore(item);
+            }
+        },
+        [onRestore],
+    );
+
+    const handlePermanentDelete = useCallback(
+        (item: T) => {
+            if (onPermanentDelete) {
+                onPermanentDelete(item);
+            }
+        },
+        [onPermanentDelete],
     );
 
     const handleFilter = useCallback(
@@ -59,7 +95,7 @@ export const Table = <T extends Record<string, any>>({
             tableState.activeFilterColumn =
                 snap.activeFilterColumn === column ? null : column;
         },
-        [snap.activeFilterColumn]
+        [snap.activeFilterColumn],
     );
 
     const resetParams = useCallback(() => {
@@ -108,7 +144,7 @@ export const Table = <T extends Record<string, any>>({
                 });
             }
         },
-        [data.pagination, location.search, location.pathname, navigate]
+        [data.pagination, location.search, location.pathname, navigate],
     );
 
     const handleLimitChange = useCallback(
@@ -121,7 +157,24 @@ export const Table = <T extends Record<string, any>>({
                 replace: true,
             });
         },
-        [location.search, location.pathname, navigate]
+        [location.search, location.pathname, navigate],
+    );
+
+    const handleSearchChange = useCallback(
+        (searchTerm: string) => {
+            const searchParams = new URLSearchParams(location.search);
+            if (searchTerm.trim()) {
+                searchParams.set("search", searchTerm.trim());
+            } else {
+                searchParams.delete("search");
+            }
+            searchParams.set("page", "1"); // Reset to first page on search
+
+            navigate(`${location.pathname}?${searchParams.toString()}`, {
+                replace: true,
+            });
+        },
+        [location.search, location.pathname, navigate],
     );
 
     const renderPaginationButtons = useCallback(() => {
@@ -147,7 +200,7 @@ export const Table = <T extends Record<string, any>>({
                 }`}
             >
                 წინა
-            </button>
+            </button>,
         );
 
         const startPage = Math.max(1, page - 2);
@@ -161,13 +214,13 @@ export const Table = <T extends Record<string, any>>({
                     className="px-3 py-1 rounded border bg-[var(--color-bg-light)] text-[var(--color-black)] hover:bg-[var(--color-gray)] border-[var(--color-gray)]"
                 >
                     1
-                </button>
+                </button>,
             );
             if (startPage > 2) {
                 buttons.push(
                     <span key="dots1" className="px-2 py-1">
                         ...
-                    </span>
+                    </span>,
                 );
             }
         }
@@ -184,7 +237,7 @@ export const Table = <T extends Record<string, any>>({
                     }`}
                 >
                     {i}
-                </button>
+                </button>,
             );
         }
 
@@ -193,7 +246,7 @@ export const Table = <T extends Record<string, any>>({
                 buttons.push(
                     <span key="dots2" className="px-2 py-1">
                         ...
-                    </span>
+                    </span>,
                 );
             }
             buttons.push(
@@ -203,7 +256,7 @@ export const Table = <T extends Record<string, any>>({
                     className="px-3 py-1 rounded border bg-[var(--color-bg-light)] text-[var(--color-black)] hover:bg-[var(--color-gray)] border-[var(--color-gray)]"
                 >
                     {totalPages}
-                </button>
+                </button>,
             );
         }
 
@@ -219,7 +272,7 @@ export const Table = <T extends Record<string, any>>({
                 }`}
             >
                 შემდეგი
-            </button>
+            </button>,
         );
 
         return buttons;
@@ -229,14 +282,21 @@ export const Table = <T extends Record<string, any>>({
         if (value === null || value === undefined) return "";
 
         if (typeof value === "number") {
-            if (key === "unit_price" || key === "unit_cost" || key === "amount") {
+            if (
+                key === "unit_price" ||
+                key === "unit_cost" ||
+                key === "amount"
+            ) {
                 return value.toLocaleString() + " ₾";
             }
             return value.toLocaleString();
         }
 
         // Format createdAt or created_at field as DD/MM/YYYY HH:MM:SS
-        if ((key === "createdAt" || key === "created_at") && typeof value === "string") {
+        if (
+            (key === "createdAt" || key === "created_at") &&
+            typeof value === "string"
+        ) {
             try {
                 const date = new Date(value);
                 if (!isNaN(date.getTime())) {
@@ -246,8 +306,14 @@ export const Table = <T extends Record<string, any>>({
                         .padStart(2, "0");
                     const year = date.getFullYear();
                     const hours = date.getHours().toString().padStart(2, "0");
-                    const minutes = date.getMinutes().toString().padStart(2, "0");
-                    const seconds = date.getSeconds().toString().padStart(2, "0");
+                    const minutes = date
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0");
+                    const seconds = date
+                        .getSeconds()
+                        .toString()
+                        .padStart(2, "0");
                     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
                 }
             } catch (error) {
@@ -274,15 +340,38 @@ export const Table = <T extends Record<string, any>>({
     return (
         <div className="w-full">
             {/* Pagination Info and Controls */}
-                    {data.pagination && data.pagination.totalCount !== undefined && (
+            {data.pagination && data.pagination.totalCount !== undefined && (
                 <div className="flex justify-between items-center mt-4 mb-2">
                     <div className="text-sm font-semibold text-[var(--color-black)] flex gap-4">
-                        <span>ჯამური: {data.pagination.totalCount} ჩანაწერი</span>
+                        <span>
+                            ჯამური: {data.pagination.totalCount} ჩანაწერი
+                        </span>
                         {data.totalAmount !== undefined && (
-                            <span>ჯამური ოდენობა: {data.totalAmount.toLocaleString()} ლარი</span>
+                            <span>
+                                ჯამური ოდენობა:{" "}
+                                {data.totalAmount.toLocaleString()} ლარი
+                            </span>
                         )}
                     </div>
                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-[var(--color-black)]">
+                                ძებნა:
+                            </span>
+                            <input
+                                type="text"
+                                value={
+                                    new URLSearchParams(location.search).get(
+                                        "search",
+                                    ) || ""
+                                }
+                                onChange={(e) =>
+                                    handleSearchChange(e.target.value)
+                                }
+                                placeholder="პროდუქტის დასახელება..."
+                                className="bg-white border border-[var(--color-gray)] rounded px-3 py-1 text-sm w-48"
+                            />
+                        </div>
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-[var(--color-black)]">
                                 გვერდზე:
@@ -329,13 +418,13 @@ export const Table = <T extends Record<string, any>>({
                                                     {getColumnDisplayName(key)}
                                                 </span>
                                                 {filterableColumns.includes(
-                                                    key
+                                                    key,
                                                 ) && (
                                                     <div className="relative">
                                                         <FilterFilled
                                                             onClick={() =>
                                                                 handleFilter(
-                                                                    key
+                                                                    key,
                                                                 )
                                                             }
                                                             className="cursor-pointer hover:opacity-70 transition-opacity"
@@ -344,7 +433,7 @@ export const Table = <T extends Record<string, any>>({
                                                             key && (
                                                             <FilterSelectorModal
                                                                 column={String(
-                                                                    snap.activeFilterColumn
+                                                                    snap.activeFilterColumn,
                                                                 )}
                                                             />
                                                         )}
@@ -354,7 +443,7 @@ export const Table = <T extends Record<string, any>>({
                                         </th>
                                     ))}
                                     <th className="text-left px-2 border-r border-[var(--color-gray)]">
-                                        მოქმედებები
+                                        {TableEnum.ACTIONS}
                                     </th>
                                 </tr>
                             </thead>
@@ -366,7 +455,7 @@ export const Table = <T extends Record<string, any>>({
                                             className="text-center py-5"
                                         >
                                             <span className="flex items-center justify-center gap-2">
-                                                მონაცემები არ მოიძებნა
+                                                {TableEnum.NO_DATA_FOUND}
                                                 <ReloadOutlined
                                                     className="cursor-pointer hover:opacity-70 transition-opacity"
                                                     onClick={resetParams}
@@ -392,43 +481,78 @@ export const Table = <T extends Record<string, any>>({
                                                         className="px-2 border-r border-[var(--color-bg-light)] truncate"
                                                         title={formatCellValue(
                                                             item[key],
-                                                            key
+                                                            key,
                                                         )}
                                                     >
                                                         {formatCellValue(
                                                             item[key],
-                                                            key
+                                                            key,
                                                         )}
                                                     </td>
                                                 );
                                             })}
                                             <td className="px-2 border-r border-[var(--color-bg-light)]">
                                                 <div className="flex items-center gap-2">
-                                                    <EditFilled
-                                                        className="cursor-pointer hover:opacity-70 transition-opacity"
-                                                        onClick={() =>
-                                                            handleEdit(item)
-                                                        }
-                                                    />
-                                                    {onQuickSell && (
-                                                        <ShoppingCartOutlined
-                                                            className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
-                                                            onClick={() =>
-                                                                handleQuickSell(
-                                                                    item
-                                                                )
-                                                            }
-                                                        />
-                                                    )}
-                                                    {onDelete && (
-                                                        <DeleteOutlined
-                                                            className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-red)]"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    item
-                                                                )
-                                                            }
-                                                        />
+                                                    {onRestore && onPermanentDelete ? (
+                                                        <>
+                                                            <RollbackOutlined
+                                                                className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
+                                                                onClick={() =>
+                                                                    handleRestore(
+                                                                        item,
+                                                                    )
+                                                                }
+                                                            />
+                                                            <DeleteOutlined
+                                                                className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-red)]"
+                                                                onClick={() =>
+                                                                    handlePermanentDelete(
+                                                                        item,
+                                                                    )
+                                                                }
+                                                            />
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {onEdit && (
+                                                                <EditFilled
+                                                                    className="cursor-pointer hover:opacity-70 transition-opacity"
+                                                                    onClick={() =>
+                                                                        handleEdit(item)
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {onQuickSell && (
+                                                                <ShoppingCartOutlined
+                                                                    className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
+                                                                    onClick={() =>
+                                                                        handleQuickSell(
+                                                                            item,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {onGift && (
+                                                                <GiftOutlined
+                                                                    className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
+                                                                    onClick={() =>
+                                                                        handleGift(
+                                                                            item,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {onDelete && (
+                                                                <DeleteOutlined
+                                                                    className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-red)]"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            item,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>

@@ -8,7 +8,7 @@ interface ComboboxProps extends Omit<InputProps, 'onChange'> {
     options: readonly { readonly _id: number | string; readonly title: string }[];
     onChange: (value: string) => void;
     value: string;
-    modalKey: 'supplierSelector' | 'categorySelector' | 'supplierFilter' | 'categoryFilter';
+    modalKey: 'supplierSelector' | 'categorySelector' | 'supplierFilter' | 'categoryFilter' | 'productSelector';
     onDelete?: (id: number, title: string) => void;
     type?: 'category' | 'supplier';
 }

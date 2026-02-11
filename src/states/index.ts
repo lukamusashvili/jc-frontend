@@ -97,6 +97,8 @@ export const resetAllStates = () => {
         total_quantity: 0,
         quantity: 0,
     };
+    productFormState.originalQuantity = 0;
+    productFormState.originalTotalQuantity = 0;
 
     // Reset categories state
     categoriesState.loading = false;
@@ -148,21 +150,33 @@ export const resetAllStates = () => {
     tableState.selectedProduct = null;
 
     // Reset modal state
-    modalState.addProduct = false;
-    modalState.editProduct = false;
-    modalState.sellProduct = false;
-    modalState.deleteProduct = false;
-    modalState.productToDelete = null;
-    modalState.walletModal = false;
-    modalState.deleteWallet = false;
-    modalState.walletToDelete = null;
-    modalState.addTransaction = false;
-    modalState.editTransaction = false;
-    modalState.deleteTransaction = false;
-    modalState.transactionToDelete = null;
-    modalState.transactionToEdit = null;
-    modalState.supplierSelector = false;
-    modalState.categorySelector = false;
+        modalState.addProduct = false;
+        modalState.editProduct = false;
+        modalState.sellProduct = false;
+        modalState.giftProduct = false;
+        modalState.deleteProduct = false;
+        modalState.restoreProduct = false;
+        modalState.permanentDeleteProduct = false;
+        modalState.productToDelete = null;
+        modalState.walletModal = false;
+        modalState.deleteWallet = false;
+        modalState.walletToDelete = null;
+        modalState.addTransaction = false;
+        modalState.editTransaction = false;
+        modalState.deleteTransaction = false;
+        modalState.restoreTransaction = false;
+        modalState.permanentDeleteTransaction = false;
+        modalState.transactionToDelete = null;
+        modalState.transactionToEdit = null;
+        modalState.transactionToPermanentDelete = null;
+        modalState.confirmEditTransaction = false;
+        modalState.confirmEditProduct = false;
+        modalState.productToEdit = null;
+        modalState.confirmEditWallet = false;
+        modalState.walletToEdit = null;
+        modalState.supplierSelector = false;
+        modalState.categorySelector = false;
+        modalState.productSelector = false;
     modalState.supplierFilter = false;
     modalState.categoryFilter = false;
     modalState.dateFilter = false;

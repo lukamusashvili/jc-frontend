@@ -29,7 +29,10 @@ export type TableProps<T = any> = {
     };
     onEdit?: (item: T) => void;
     onQuickSell?: (item: T) => void;
+    onGift?: (item: T) => void;
     onDelete?: (item: T) => void;
+    onRestore?: (item: T) => void;
+    onPermanentDelete?: (item: T) => void;
 };
 
 export const productsColumns = {

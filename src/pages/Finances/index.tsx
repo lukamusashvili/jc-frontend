@@ -9,6 +9,7 @@ import { Modal } from "../../components/layout/Modal";
 import { toast } from "react-toastify";
 import { Wallet } from "../../types/finances";
 import { EditFilled, DeleteFilled, PlusOutlined } from "@ant-design/icons";
+import { Delete } from "../../enums/confirmation";
 
 export default function Finances() {
     const navigate = useNavigate();
@@ -124,13 +125,13 @@ export default function Finances() {
                                         />
                                         <DeleteFilled
                                             className={`${
-                                                wallet._id === 1
+                                                wallet._id === 1 || wallet._id === 2
                                                     ? "cursor-not-allowed opacity-50 text-[var(--color-gray)]"
                                                     : "cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-red)]"
                                             }`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (wallet._id !== 1) {
+                                                if (wallet._id !== 1 && wallet._id !== 2) {
                                                     handleDeleteWallet(wallet);
                                                 }
                                             }}
@@ -186,7 +187,7 @@ export default function Finances() {
                 >
                     <div className="text-center py-4">
                         <p className="text-[var(--color-black)]">
-                            დარწმუნებული ხართ რომ გსურთ ამ საფულის წაშლა
+                            {Delete.DELETE_WALLET}
                         </p>
                     </div>
                 </Modal>

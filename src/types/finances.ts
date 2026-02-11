@@ -15,6 +15,7 @@ export interface Transaction {
     amount: number;
     product?: string;
     comment?: string;
+    deleted?: boolean;
     created_at?: string;
 }
 

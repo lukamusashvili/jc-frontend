@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { useSnapshot } from "valtio";
-import { walletFormState } from "../../states";
+import { walletFormState, modalState } from "../../states";
 import { Input } from "../Input";
 import { Modal } from "../layout/Modal";
 import { toast } from "react-toastify";
 import { addWallet, editWallet } from "../../actions/wallets";
 import { Wallet, WalletFormData } from "../../types/finances";
+import { Edit } from "../../enums/confirmation";
 
 interface WalletModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export const WalletModal = ({
     wallet,
 }: WalletModalProps) => {
     const snap = useSnapshot(walletFormState);
+    const modalSnap = useSnapshot(modalState);
 
     useEffect(() => {
         if (wallet) {
@@ -61,6 +63,17 @@ export const WalletModal = ({
             return;
         }
 
+        // Show confirmation modal first if editing
+        if (wallet) {
+            modalState.confirmEditWallet = true;
+            return;
+        }
+        
+        // For new wallets, submit directly
+        await submitWallet();
+    };
+
+    const submitWallet = async () => {
         walletFormState.loading = true;
         try {
             if (wallet) {
@@ -88,57 +101,94 @@ export const WalletModal = ({
         }
     };
 
+    const confirmSubmit = async () => {
+        modalState.confirmEditWallet = false;
+        await submitWallet();
+    };
+
+    const closeEditConfirmModal = () => {
+        modalState.confirmEditWallet = false;
+    };
+
     if (!isOpen) return null;
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={wallet ? "საფულის რედაქტირება" : "საფულის დამატება"}
-            size="md"
-            actionButtons={{
-                primary: {
-                    title: wallet ? "განახლება" : "დამატება",
-                    onClick: handleSubmit,
-                    type: snap.loading ? "disabled" : "gold",
-                },
-                secondary: {
-                    title: "გაუქმება",
-                    onClick: onClose,
-                    type: snap.loading ? "disabled" : "white",
-                },
-            }}
-        >
-            <div className="space-y-4">
-                <Input
-                    label="დასახელება *"
-                    value={snap.formData.title}
-                    onChange={(value: string) =>
-                        handleInputChange("title", value)
-                    }
-                    required
-                />
+        <>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title={wallet ? "საფულის რედაქტირება" : "საფულის დამატება"}
+                size="md"
+                actionButtons={{
+                    primary: {
+                        title: wallet ? "განახლება" : "დამატება",
+                        onClick: handleSubmit,
+                        type: snap.loading || modalSnap.confirmEditWallet ? "disabled" : "gold",
+                    },
+                    secondary: {
+                        title: "გაუქმება",
+                        onClick: onClose,
+                        type: snap.loading ? "disabled" : "white",
+                    },
+                }}
+            >
+                <div className="space-y-4">
+                    <Input
+                        label="დასახელება *"
+                        value={snap.formData.title}
+                        onChange={(value: string) =>
+                            handleInputChange("title", value)
+                        }
+                        required
+                    />
 
-                <Input
-                    label="ბალანსი (₾) *"
-                    type="number"
-                    value={snap.formData.balance}
-                    onChange={(value: string) =>
-                        handleInputChange("balance", Number(value))
-                    }
-                    required
-                    min="0"
-                    step="0.01"
-                />
+                    <Input
+                        label="ბალანსი (₾) *"
+                        type="number"
+                        value={snap.formData.balance}
+                        onChange={(value: string) =>
+                            handleInputChange("balance", Number(value))
+                        }
+                        required
+                        min="0"
+                        step="0.01"
+                    />
 
-                <Input
-                    label="კომენტარი"
-                    value={snap.formData.comment}
-                    onChange={(value: string) =>
-                        handleInputChange("comment", value)
-                    }
-                />
-            </div>
-        </Modal>
+                    <Input
+                        label="კომენტარი"
+                        value={snap.formData.comment}
+                        onChange={(value: string) =>
+                            handleInputChange("comment", value)
+                        }
+                    />
+                </div>
+            </Modal>
+
+            {/* Edit Confirmation Modal */}
+            <Modal
+                isOpen={modalSnap.confirmEditWallet}
+                onClose={closeEditConfirmModal}
+                title="ყურადღება"
+                size="md"
+                actionButtons={{
+                    primary: {
+                        title: "დიახ",
+                        onClick: confirmSubmit,
+                        type: snap.loading ? "disabled" : "gold",
+                    },
+                    secondary: {
+                        title: "გაუქმება",
+                        onClick: closeEditConfirmModal,
+                        type: snap.loading ? "disabled" : "white",
+                    },
+                }}
+            >
+                <div className="text-center py-4">
+                    <p className="text-[var(--color-black)]">
+                        {Edit.EDIT_WALLET}
+                    </p>
+                </div>
+            </Modal>
+        </>
     );
 };
