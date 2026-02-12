@@ -53,8 +53,12 @@ export async function getProducts(query: string) {
             }
         }
 
-        // Apply pagination
-        queryBuilder = queryBuilder.order("_id", { ascending: true }).range(skip, skip + limit - 1);
+        // Apply sorting
+        const sortColumn = urlParams.get("sort") || "title"; // Default to title
+        const sortOrder = urlParams.get("order") || "asc"; // Default to ascending
+        const ascending = sortOrder !== "desc";
+        
+        queryBuilder = queryBuilder.order(sortColumn, { ascending }).range(skip, skip + limit - 1);
 
         const { data, error, count } = await queryBuilder;
 
@@ -311,8 +315,8 @@ export async function getDeletedProducts(query: string) {
             }
         }
 
-        // Apply pagination
-        queryBuilder = queryBuilder.order("_id", { ascending: true }).range(skip, skip + limit - 1);
+        // Apply sorting - sort by title alphabetically (0-9, a-z, ა-ჰ)
+        queryBuilder = queryBuilder.order("title", { ascending: true }).range(skip, skip + limit - 1);
 
         const { data, error, count } = await queryBuilder;
 

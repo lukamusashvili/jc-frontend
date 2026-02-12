@@ -25,6 +25,7 @@ export type TableProps<T = any> = {
     columns: {
         displayColumns: (keyof T)[];
         filterableColumns: (keyof T)[];
+        sortableColumns?: (keyof T)[];
         displayNames: Record<keyof T, string>;
     };
     onEdit?: (item: T) => void;
@@ -51,6 +52,10 @@ export const productsColumns = {
         "supplier",
         "category",
         "createdAt",
+    ] as (keyof Product)[],
+
+    sortableColumns: [
+        "title",
     ] as (keyof Product)[],
 
     displayNames: {

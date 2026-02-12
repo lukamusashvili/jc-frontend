@@ -8,6 +8,8 @@ import {
     GiftOutlined,
     DeleteOutlined,
     RollbackOutlined,
+    SortAscendingOutlined,
+    SortDescendingOutlined,
 } from "@ant-design/icons";
 import { TableProps } from "../../types/table";
 import {
@@ -34,7 +36,7 @@ export const Table = <T extends Record<string, any>>({
     const location = useLocation();
     const snap = useSnapshot(tableState);
 
-    const { displayColumns, filterableColumns, displayNames } = columns;
+    const { displayColumns, filterableColumns, sortableColumns = [], displayNames } = columns;
 
     const handleEdit = useCallback(
         (item: T) => {
@@ -169,6 +171,30 @@ export const Table = <T extends Record<string, any>>({
                 searchParams.delete("search");
             }
             searchParams.set("page", "1"); // Reset to first page on search
+
+            navigate(`${location.pathname}?${searchParams.toString()}`, {
+                replace: true,
+            });
+        },
+        [location.search, location.pathname, navigate],
+    );
+
+    const handleSortToggle = useCallback(
+        (column: keyof T) => {
+            const searchParams = new URLSearchParams(location.search);
+            const currentSort = searchParams.get("sort");
+            const currentOrder = searchParams.get("order");
+            
+            // If clicking on the same column, toggle order; otherwise set to ascending
+            if (currentSort === String(column)) {
+                const newOrder = currentOrder === "desc" ? "asc" : "desc";
+                searchParams.set("order", newOrder);
+            } else {
+                searchParams.set("sort", String(column));
+                searchParams.set("order", "asc");
+            }
+            
+            searchParams.set("page", "1"); // Reset to first page on sort
 
             navigate(`${location.pathname}?${searchParams.toString()}`, {
                 replace: true,
@@ -417,28 +443,55 @@ export const Table = <T extends Record<string, any>>({
                                                 <span>
                                                     {getColumnDisplayName(key)}
                                                 </span>
-                                                {filterableColumns.includes(
-                                                    key,
-                                                ) && (
-                                                    <div className="relative">
-                                                        <FilterFilled
+                                                <div className="flex items-center gap-1">
+                                                    {sortableColumns.includes(
+                                                        key,
+                                                    ) && (
+                                                        <div
                                                             onClick={() =>
-                                                                handleFilter(
+                                                                handleSortToggle(
                                                                     key,
                                                                 )
                                                             }
                                                             className="cursor-pointer hover:opacity-70 transition-opacity"
-                                                        />
-                                                        {snap.activeFilterColumn ===
-                                                            key && (
-                                                            <FilterSelectorModal
-                                                                column={String(
-                                                                    snap.activeFilterColumn,
-                                                                )}
+                                                        >
+                                                            {new URLSearchParams(
+                                                                location.search,
+                                                            ).get("sort") ===
+                                                            String(key) &&
+                                                            new URLSearchParams(
+                                                                location.search,
+                                                            ).get("order") ===
+                                                                "desc" ? (
+                                                                <SortDescendingOutlined />
+                                                            ) : (
+                                                                <SortAscendingOutlined />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {filterableColumns.includes(
+                                                        key,
+                                                    ) && (
+                                                        <div className="relative">
+                                                            <FilterFilled
+                                                                onClick={() =>
+                                                                    handleFilter(
+                                                                        key,
+                                                                    )
+                                                                }
+                                                                className="cursor-pointer hover:opacity-70 transition-opacity"
                                                             />
-                                                        )}
-                                                    </div>
-                                                )}
+                                                            {snap.activeFilterColumn ===
+                                                                key && (
+                                                                <FilterSelectorModal
+                                                                    column={String(
+                                                                        snap.activeFilterColumn,
+                                                                    )}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </span>
                                         </th>
                                     ))}
