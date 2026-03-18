@@ -318,35 +318,6 @@ export const Table = <T extends Record<string, any>>({
             return value.toLocaleString();
         }
 
-        // Format createdAt or created_at field as DD/MM/YYYY HH:MM:SS
-        if (
-            (key === "createdAt" || key === "created_at") &&
-            typeof value === "string"
-        ) {
-            try {
-                const date = new Date(value);
-                if (!isNaN(date.getTime())) {
-                    const day = date.getDate().toString().padStart(2, "0");
-                    const month = (date.getMonth() + 1)
-                        .toString()
-                        .padStart(2, "0");
-                    const year = date.getFullYear();
-                    const hours = date.getHours().toString().padStart(2, "0");
-                    const minutes = date
-                        .getMinutes()
-                        .toString()
-                        .padStart(2, "0");
-                    const seconds = date
-                        .getSeconds()
-                        .toString()
-                        .padStart(2, "0");
-                    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-                }
-            } catch (error) {
-                // If date parsing fails, return original value
-            }
-        }
-
         // Format type field to display Georgian text
         if (key === "type" && typeof value === "string") {
             if (value === TransactionType.IN) {
