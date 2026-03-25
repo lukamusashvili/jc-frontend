@@ -154,6 +154,7 @@ export const resetAllStates = () => {
         modalState.editProduct = false;
         modalState.sellProduct = false;
         modalState.giftProduct = false;
+        modalState.returnProduct = false;
         modalState.deleteProduct = false;
         modalState.restoreProduct = false;
         modalState.permanentDeleteProduct = false;

@@ -12,6 +12,7 @@ import { EditProductModal } from "../components/table/modals/editProductModal";
 import { AddProductModal } from "../components/table/modals/addProductModal";
 import { QuickSellModal } from "../components/table/modals/quickSellModal";
 import { QuickGiftModal } from "../components/table/modals/quickGiftModal";
+import { QuickReturnModal } from "../components/table/modals/quickReturnModal";
 import { Modal } from "../components/layout/Modal";
 import { Product } from "../types/products";
 import { Delete } from "../enums/confirmation";
@@ -139,6 +140,11 @@ export default function Home() {
     const handleGift = (product: Product) => {
         tableState.selectedProduct = product;
         modalState.giftProduct = true;
+    };
+
+    const handleReturn = (product: Product) => {
+        tableState.selectedProduct = product;
+        modalState.returnProduct = true;
     };
 
     const handleDeleteProduct = (product: Product) => {
@@ -279,6 +285,7 @@ export default function Home() {
                     onEdit={handleEditProduct}
                     onQuickSell={handleQuickSell}
                     onGift={handleGift}
+                    onReturn={handleReturn}
                     onDelete={handleDeleteProduct}
                 />
 
@@ -318,6 +325,17 @@ export default function Home() {
                     isOpen={modalSnap.giftProduct}
                     onClose={() => {
                         modalState.giftProduct = false;
+                        tableState.selectedProduct = null;
+                        handleModalClose();
+                    }}
+                    onSuccess={handleEditSuccess}
+                />
+
+                <QuickReturnModal
+                    product={tableSnap.selectedProduct}
+                    isOpen={modalSnap.returnProduct}
+                    onClose={() => {
+                        modalState.returnProduct = false;
                         tableState.selectedProduct = null;
                         handleModalClose();
                     }}

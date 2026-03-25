@@ -8,6 +8,7 @@ export const modalState = proxy({
     editProduct: false,
     sellProduct: false,
     giftProduct: false,
+    returnProduct: false,
     deleteProduct: false,
     restoreProduct: false,
     permanentDeleteProduct: false,

@@ -28,6 +28,7 @@ export const Table = <T extends Record<string, any>>({
     onEdit,
     onQuickSell,
     onGift,
+    onReturn,
     onDelete,
     onRestore,
     onPermanentDelete,
@@ -72,6 +73,15 @@ export const Table = <T extends Record<string, any>>({
             }
         },
         [onDelete],
+    );
+
+    const handleReturn = useCallback(
+        (item: T) => {
+            if (onReturn) {
+                onReturn(item);
+            }
+        },
+        [onReturn],
     );
 
     const handleRestore = useCallback(
@@ -561,6 +571,16 @@ export const Table = <T extends Record<string, any>>({
                                                                     className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
                                                                     onClick={() =>
                                                                         handleGift(
+                                                                            item,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {onReturn && (
+                                                                <RollbackOutlined
+                                                                    className="cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-green)]"
+                                                                    onClick={() =>
+                                                                        handleReturn(
                                                                             item,
                                                                         )
                                                                     }

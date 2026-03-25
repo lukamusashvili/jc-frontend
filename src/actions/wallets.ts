@@ -1,8 +1,54 @@
 import supabase from "../utils/supabase";
 import { Wallet, WalletFormData } from "../types/finances";
 
+async function ensureProtectedWallets() {
+    const protectedWallets = [
+        { _id: 1, title: "სასანთლე", balance: 0, comment: null },
+        { _id: 2, title: "დაბრუნება", balance: 0, comment: null },
+    ];
+
+    for (const protectedWallet of protectedWallets) {
+        const { data: existingWallet, error: fetchError } = await supabase
+            .from("wallet")
+            .select("_id, title")
+            .eq("_id", protectedWallet._id)
+            .maybeSingle();
+
+        if (fetchError) {
+            throw fetchError;
+        }
+
+        if (!existingWallet) {
+            const { error: insertError } = await supabase.from("wallet").insert({
+                _id: protectedWallet._id,
+                title: protectedWallet.title,
+                balance: protectedWallet.balance,
+                comment: protectedWallet.comment,
+            });
+
+            if (insertError) {
+                throw insertError;
+            }
+            continue;
+        }
+
+        if (existingWallet.title !== protectedWallet.title) {
+            const { error: updateError } = await supabase
+                .from("wallet")
+                .update({ title: protectedWallet.title })
+                .eq("_id", protectedWallet._id);
+
+            if (updateError) {
+                throw updateError;
+            }
+        }
+    }
+}
+
 export async function getWallets() {
     try {
+        await ensureProtectedWallets();
+
         const { data, error } = await supabase
             .from("wallet")
             .select("_id, title, balance, comment")
