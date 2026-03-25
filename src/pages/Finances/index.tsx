@@ -125,13 +125,13 @@ export default function Finances() {
                                         />
                                         <DeleteFilled
                                             className={`${
-                                                wallet._id === 1 || wallet._id === 2
+                                                wallet._id === 1 || wallet._id === 2 || wallet._id === 3
                                                     ? "cursor-not-allowed opacity-50 text-[var(--color-gray)]"
                                                     : "cursor-pointer hover:opacity-70 transition-opacity text-[var(--color-red)]"
                                             }`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (wallet._id !== 1 && wallet._id !== 2) {
+                                                if (wallet._id !== 1 && wallet._id !== 2 && wallet._id !== 3) {
                                                     handleDeleteWallet(wallet);
                                                 }
                                             }}

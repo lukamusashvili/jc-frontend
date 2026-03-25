@@ -3,14 +3,30 @@ import { Wallet, WalletFormData } from "../types/finances";
 
 async function ensureProtectedWallets() {
     const protectedWallets = [
-        { _id: 1, title: "სასანთლე", balance: 0, comment: null },
-        { _id: 2, title: "დაბრუნება", balance: 0, comment: null },
+        {
+            _id: 1,
+            title: "სასანთლე",
+            balance: 0,
+            comment: "სასანთლის მთავარი საფულე",
+        },
+        {
+            _id: 2,
+            title: "გაჩუქებული",
+            balance: 0,
+            comment: "გაჩუქებული პროდუქციის აღრიცხვა",
+        },
+        {
+            _id: 3,
+            title: "დაბრუნება",
+            balance: 0,
+            comment: "გაჩუქებული პროდუქციის აღრიცხვა",
+        },
     ];
 
     for (const protectedWallet of protectedWallets) {
         const { data: existingWallet, error: fetchError } = await supabase
             .from("wallet")
-            .select("_id, title")
+            .select("_id, title, comment")
             .eq("_id", protectedWallet._id)
             .maybeSingle();
 
@@ -32,10 +48,16 @@ async function ensureProtectedWallets() {
             continue;
         }
 
-        if (existingWallet.title !== protectedWallet.title) {
+        if (
+            existingWallet.title !== protectedWallet.title ||
+            (existingWallet.comment || null) !== protectedWallet.comment
+        ) {
             const { error: updateError } = await supabase
                 .from("wallet")
-                .update({ title: protectedWallet.title })
+                .update({
+                    title: protectedWallet.title,
+                    comment: protectedWallet.comment,
+                })
                 .eq("_id", protectedWallet._id);
 
             if (updateError) {
@@ -135,6 +157,10 @@ export async function editWallet(data: Wallet) {
 
 export async function deleteWallet(id: number) {
     try {
+        if (id === 1 || id === 2 || id === 3) {
+            throw new Error("ძირითადი საფულეების წაშლა დაუშვებელია");
+        }
+
         const { error } = await supabase
             .from("wallet")
             .delete()

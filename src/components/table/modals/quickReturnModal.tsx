@@ -50,7 +50,7 @@ export const QuickReturnModal = ({
 
             try {
                 const wallets = await getWallets();
-                const returnWallet = wallets.find((w) => w._id === 2);
+                const returnWallet = wallets.find((w) => w._id === 3);
 
                 if (
                     returnWallet &&
