@@ -337,6 +337,22 @@ export const Table = <T extends Record<string, any>>({
             }
         }
 
+        // Display created dates as day-only (DD/MM/YYYY)
+        if (
+            (key === "createdAt" || key === "created_at") &&
+            typeof value === "string"
+        ) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+                const day = date.getUTCDate().toString().padStart(2, "0");
+                const month = (date.getUTCMonth() + 1)
+                    .toString()
+                    .padStart(2, "0");
+                const year = date.getUTCFullYear().toString();
+                return `${day}/${month}/${year}`;
+            }
+        }
+
         return String(value);
     };
 

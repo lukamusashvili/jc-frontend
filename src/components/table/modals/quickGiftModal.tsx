@@ -59,9 +59,9 @@ export const QuickGiftModal = ({
                 if (
                     giftWallet &&
                     quantityGifted > 0 &&
-                    product.unit_price > 0
+                    product.unit_cost > 0
                 ) {
-                    const giftAmount = product.unit_price * quantityGifted;
+                    const giftAmount = product.unit_cost * quantityGifted;
                     await addTransaction({
                         title: "პროდუქტის გაჩუქება",
                         wallet: giftWallet._id.toString(),

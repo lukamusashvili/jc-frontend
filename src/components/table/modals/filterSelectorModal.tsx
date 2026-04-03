@@ -64,10 +64,9 @@ export const FilterSelectorModal = ({ column }: { column: string }) => {
 
         // Set the date range filter - handle both createdAt and created_at
         const dateKey = column === "created_at" ? "created_at" : "createdAt";
-        (query as any)[dateKey] = {
-            from: formattedFromDate,
-            to: formattedToDate,
-        };
+        // Backend expects dot keys like "createdAt.from" and "createdAt.to"
+        (query as any)[`${dateKey}.from`] = formattedFromDate;
+        (query as any)[`${dateKey}.to`] = formattedToDate;
 
         const updatedQuery = queryString.stringify(query, {
             arrayFormat: "comma",
@@ -115,16 +114,14 @@ export const FilterSelectorModal = ({ column }: { column: string }) => {
         if (column === "createdAt" || column === "created_at") {
             // Handle date range filter initialization
             const dateKey = column === "created_at" ? "created_at" : "createdAt";
-            if (
-                query[dateKey] &&
-                typeof query[dateKey] === "object" &&
-                "from" in query[dateKey] &&
-                "to" in query[dateKey]
-            ) {
-                const dateRange = query[dateKey] as any;
-                filterModalState.selectedFilters = [
-                    `${dateRange.from} - ${dateRange.to}`,
-                ];
+            const fromKey = `${dateKey}.from`;
+            const toKey = `${dateKey}.to`;
+
+            const fromVal = (query as any)[fromKey];
+            const toVal = (query as any)[toKey];
+
+            if (typeof fromVal === "string" && typeof toVal === "string") {
+                filterModalState.selectedFilters = [`${fromVal} - ${toVal}`];
             } else {
                 filterModalState.selectedFilters = [];
             }
@@ -201,7 +198,8 @@ export const FilterSelectorModal = ({ column }: { column: string }) => {
                                                 window.location.search
                                             );
                                             const dateKey = column === "created_at" ? "created_at" : "createdAt";
-                                            delete query[dateKey];
+                                            delete (query as any)[`${dateKey}.from`];
+                                            delete (query as any)[`${dateKey}.to`];
                                             const updatedQuery =
                                                 queryString.stringify(query, {
                                                     arrayFormat: "comma",
