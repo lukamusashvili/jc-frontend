@@ -171,6 +171,27 @@ export async function getTransactionsSum(walletId: string, query: string = "") {
     }
 }
 
+export async function getTodayTransactionsSum(walletId: string): Promise<number> {
+    try {
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+
+        const { data, error } = await supabase
+            .from("transactions")
+            .select("amount")
+            .eq("wallet", walletId)
+            .eq("deleted", false)
+            .gte("created_at", startOfDay);
+
+        if (error) throw error;
+
+        return (data || []).reduce((total, t) => total + Number(t.amount || 0), 0);
+    } catch (error: any) {
+        console.error("Error fetching today's transactions sum:", error);
+        throw error;
+    }
+}
+
 async function updateWalletBalance(walletId: string, amountChange: number) {
     try {
         const wallets = await getWallets();

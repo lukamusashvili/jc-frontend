@@ -1,36 +1,36 @@
 import { useLocation, useNavigate } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../Button";
 import { walletsState } from "../../states";
 import { getWallets } from "../../actions/wallets";
+import { getTodayTransactionsSum } from "../../actions/transactions";
+import { GEORGIAN_MONTHS } from "../../enums/months";
 
 export default function Nav() {
     const location = useLocation();
     const navigate = useNavigate();
+    const [dailyBalance, setDailyBalance] = useState<number | null>(null);
 
-    // Fetch wallets on component mount to ensure balance is available
     useEffect(() => {
-        const fetchWallets = async () => {
-            if (walletsState.data.length === 0) {
-                try {
-                    const walletsData = await getWallets();
-                    walletsState.data = walletsData || [];
-                } catch (error) {
-                    console.error("Error fetching wallets:", error);
-                }
+        const fetchData = async () => {
+            try {
+                const [walletsData, sum] = await Promise.all([
+                    walletsState.data.length === 0 ? getWallets() : Promise.resolve(walletsState.data),
+                    getTodayTransactionsSum("1"),
+                ]);
+                if (walletsData) walletsState.data = walletsData;
+                setDailyBalance(sum);
+            } catch (error) {
+                console.error("Error fetching nav data:", error);
+                setDailyBalance(0);
             }
         };
 
-        fetchWallets();
+        fetchData();
     }, []);
 
-    // Get the სასანთლე wallet balance (ID 1)
-    const getSasantleBalance = () => {
-        const sasantleWallet = walletsState.data.find(
-            (wallet) => wallet._id === 1,
-        );
-        return sasantleWallet ? sasantleWallet.balance : 0;
-    };
+    const today = new Date();
+    const tooltipText = `${today.getDate()} ${GEORGIAN_MONTHS[today.getMonth()]} ბალანსი`;
 
     function handleNavigation(path: string) {
         navigate(path);
@@ -75,13 +75,24 @@ export default function Nav() {
                 />
             </div>
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-2 whitespace-nowrap">
+                <div
+                    className="relative group flex items-center gap-2 px-3 py-2 whitespace-nowrap cursor-default"
+                >
                     <span className="text-sm text-[var(--color-white)]">
                         ბალანსი:
                     </span>
-                    <span className="text-lg font-bold text-[var(--color-gold)]">
-                        {getSasantleBalance().toLocaleString()} ₾
-                    </span>
+                    {dailyBalance === null ? (
+                        <span className="text-lg font-bold text-[var(--color-gold)] animate-pulse">
+                            ...
+                        </span>
+                    ) : (
+                        <span className="text-lg font-bold text-[var(--color-gold)]">
+                            {dailyBalance.toLocaleString()} ₾
+                        </span>
+                    )}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-[var(--color-bg-dark)] border border-[var(--color-gray)] text-xs text-[var(--color-white)] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150">
+                        {tooltipText}
+                    </div>
                 </div>
 
                 <Button
